@@ -159,9 +159,8 @@
   (scale (square (subtract activation-l target)) 0.5))
 
 (defun nabla-l (output-l activation-l target)
-  (average-columns
-    (hadamard (sigmoid-derivative-map output-l)
-              (subtract activation-l target))))
+  (hadamard (sigmoid-derivative-map output-l)
+            (subtract activation-l target)))
 
 (defun nabla-n (weights-1 outputs-0 nabla-l)
   (labels ((rec (weights outputs nablas)
@@ -176,7 +175,7 @@
                           (multiply
                             (transpose weight-n+1)
                             nabla-n+1)
-                          (average-columns output-n))
+                          output-n)
                         nablas)))
                nablas)))
     (rec (reverse weights-1) (reverse outputs-0) (list nabla-l))))
@@ -195,13 +194,14 @@
                         (multiply
                           nabla-n
                           (transpose 
-                            (average-columns activation-n-1)))
+                            activation-n-1))
                         weight-deltas)))
                (nreverse weight-deltas))))
     (rec nablas-0 activations-0 nil)))
 
 (defun bias-deltas (nablas-0)
-  nablas-0)
+  (loop for nablas in nablas-0
+        collect (average-columns nablas)))
 
 (defun update-weights (weight-deltas-0 weights-0 learning-rate)
   (loop for weight-deltas in weight-deltas-0
@@ -247,16 +247,16 @@
 ;;; testing
 ;;;
 
-(defvar input/ #2A((0)
-                   (1)))
-(defvar target/ #2A((1)))
+(defvar input/ #2A((0 0 1 1)
+                   (1 0 1 0)))
+(defvar target/ #2A((1 0 0 1)))
 
 (multiple-value-bind (weights biases) (random-network '(2 3 1))
   (defvar weights/ weights)
   (defvar biases/ biases))
 
 (multiple-value-bind (trained-weights trained-biases) 
-  (train input/ target/ weights/ biases/ 1 5000)
+  (train input/ target/ weights/ biases/ 0.75 1000)
   (defvar trained-weights/ trained-weights)
   (defvar trained-biases/ trained-biases))
 
