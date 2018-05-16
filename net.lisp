@@ -234,7 +234,6 @@
 (defun random-network (layer-sizes)
   (values (random-weights layer-sizes) (random-biases layer-sizes)))
 
-;(defun cost (activation-l target)
 (defun train (input target weights biases learning-rate desired-cost)
   (multiple-value-bind (outputs activations) (propogate input weights biases)
     (let ((cost (cost (last1 activations) target)))
@@ -246,6 +245,11 @@
                (trained-biases (update-biases bias-deltas biases learning-rate)))
           (train input target trained-weights trained-biases learning-rate desired-cost))
         (values weights biases)))))
+
+(defun predict (input weights biases)
+  (multiple-value-bind (outputs activations) (propogate input weights biases)
+    (declare (ignore outputs))
+    (last1 activations)))
 
 ;;;
 ;;; testing
@@ -272,6 +276,4 @@
 
 (multiple-value-bind (outputs activations) (propogate input/ trained-weights/ trained-biases/)
   (defvar outputs/ outputs)
-  (defvar activations/ activations)
-  (print-matricies outputs 'outputs)
-  (print-matricies activations 'activations))
+  (defvar activations/ activations))
