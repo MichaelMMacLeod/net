@@ -234,16 +234,18 @@
 (defun random-network (layer-sizes)
   (values (random-weights layer-sizes) (random-biases layer-sizes)))
 
-(defun train (input target weights biases learning-rate iterations)
-  (if (zerop iterations)
-    (values weights biases)
-    (multiple-value-bind (outputs activations) (propogate input weights biases)
-      (let* ((nablas (nablas weights outputs activations target))
-             (weight-deltas (weight-deltas nablas activations))
-             (bias-deltas (bias-deltas nablas))
-             (trained-weights (update-weights weight-deltas weights learning-rate))
-             (trained-biases (update-biases bias-deltas biases learning-rate)))
-        (train input target trained-weights trained-biases learning-rate (1- iterations))))))
+;(defun cost (activation-l target)
+(defun train (input target weights biases learning-rate desired-cost)
+  (multiple-value-bind (outputs activations) (propogate input weights biases)
+    (let ((cost (cost (last1 activations) target)))
+      (if (> (aref (average-columns cost) 0 0) desired-cost)
+        (let* ((nablas (nablas weights outputs activations target))
+               (weight-deltas (weight-deltas nablas activations))
+               (bias-deltas (bias-deltas nablas))
+               (trained-weights (update-weights weight-deltas weights learning-rate))
+               (trained-biases (update-biases bias-deltas biases learning-rate)))
+          (train input target trained-weights trained-biases learning-rate desired-cost))
+        (values weights biases)))))
 
 ;;;
 ;;; testing
@@ -259,12 +261,12 @@
                     (1 0 1 0)))
 (defvar target/ #2A((0 0 1 0)))
 
-(multiple-value-bind (weights biases) (random-network '(2 2 1))
+(multiple-value-bind (weights biases) (random-network '(2 3 1))
   (defvar weights/ weights)
   (defvar biases/ biases))
 
 (multiple-value-bind (trained-weights trained-biases) 
-  (train input/ target/ weights/ biases/ 1.0 1000)
+  (train input/ target/ weights/ biases/ 1.0 0.0001)
   (defvar trained-weights/ trained-weights)
   (defvar trained-biases/ trained-biases))
 
