@@ -140,18 +140,18 @@
 (defun activation-n (output-n)
   (sigmoid-map output-n))
 
-(defun propogate (input weights-0 biases-0)
+(defun propogate (input weights-0 biases-0 &key (activation-function #'sigmoid))
   (labels ((rec (weights biases outputs activations)
              (if (or weights biases)
-               (let ((weight-n (first weights))
-                     (activation-n-1 (first activations))
-                     (bias-n (first biases)))
-                 (let* ((output-n (output-n weight-n activation-n-1 bias-n))
-                        (activation-n (activation-n output-n)))
-                   (rec (rest weights)
-                        (rest biases)
-                        (cons output-n outputs)
-                        (cons activation-n activations))))
+               (let* ((weight-n (first weights))
+                      (activation-n-1 (first activations))
+                      (bias-n (first biases))
+                      (output-n (add-column bias-n (multiply weight-n activation-n-1)))
+                      (activation-n (matrix-map activation-function output-n)))
+                 (rec (rest weights)
+                      (rest biases)
+                      (cons output-n outputs)
+                      (cons activation-n activations)))
                (values (nreverse outputs) (nreverse activations)))))
     (rec weights-0 biases-0 nil (list input))))
 
@@ -255,12 +255,6 @@
 ;;; testing
 ;;;
 
-;; xor
-;(defvar input/  #2A((0 0 1 1)
-;                    (1 0 1 0)))
-;(defvar target/ #2A((1 0 0 1)))
-
-;; and
 (defvar input/  #2A((0 0 1 1)
                     (1 0 1 0)))
 (defvar target/ #2A((0 0 1 0)))
@@ -277,3 +271,8 @@
 (multiple-value-bind (outputs activations) (propogate input/ trained-weights/ trained-biases/)
   (defvar outputs/ outputs)
   (defvar activations/ activations))
+
+(print-matrix (predict #2A((0) (0)) trained-weights/ trained-biases/) '0-0)
+(print-matrix (predict #2A((1) (0)) trained-weights/ trained-biases/) '1-0)
+(print-matrix (predict #2A((0) (1)) trained-weights/ trained-biases/) '0-1)
+(print-matrix (predict #2A((1) (1)) trained-weights/ trained-biases/) '1-1)
