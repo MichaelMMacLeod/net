@@ -175,13 +175,15 @@
                           (multiply
                             (transpose weight-n+1)
                             nabla-n+1)
-                          output-n)
+                          (sigmoid-derivative-map output-n))
                         nablas)))
                nablas)))
     (rec (reverse weights-1) (reverse outputs-0) (list nabla-l))))
 
 (defun nablas (weights outputs activations target)
-  (nabla-n (rest weights) (butlast outputs) (nabla-l (last1 outputs) (last1 activations) target)))
+  (nabla-n (rest weights) 
+           (butlast outputs) 
+           (nabla-l (last1 outputs) (last1 activations) target)))
 
 (defun weight-deltas (nablas-0 activations-0)
   (labels ((rec (nablas activations weight-deltas)
@@ -247,19 +249,27 @@
 ;;; testing
 ;;;
 
-(defvar input/ #2A((0 0 1 1)
-                   (1 0 1 0)))
-(defvar target/ #2A((1 0 0 1)))
+;; xor
+;(defvar input/  #2A((0 0 1 1)
+;                    (1 0 1 0)))
+;(defvar target/ #2A((1 0 0 1)))
 
-(multiple-value-bind (weights biases) (random-network '(2 3 1))
+;; and
+(defvar input/  #2A((0 0 1 1)
+                    (1 0 1 0)))
+(defvar target/ #2A((0 0 1 0)))
+
+(multiple-value-bind (weights biases) (random-network '(2 2 1))
   (defvar weights/ weights)
   (defvar biases/ biases))
 
 (multiple-value-bind (trained-weights trained-biases) 
-  (train input/ target/ weights/ biases/ 0.75 1000)
+  (train input/ target/ weights/ biases/ 1.0 1000)
   (defvar trained-weights/ trained-weights)
   (defvar trained-biases/ trained-biases))
 
 (multiple-value-bind (outputs activations) (propogate input/ trained-weights/ trained-biases/)
+  (defvar outputs/ outputs)
+  (defvar activations/ activations)
   (print-matricies outputs 'outputs)
   (print-matricies activations 'activations))
