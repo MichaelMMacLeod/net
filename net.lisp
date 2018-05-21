@@ -181,8 +181,8 @@
     (rec (reverse weights-1) (reverse outputs-0) (list nabla-l))))
 
 (defun nablas (weights outputs activations target)
-  (nabla-n (rest weights) 
-           (butlast outputs) 
+  (nabla-n (rest weights)
+           (butlast outputs)
            (nabla-l (last1 outputs) (last1 activations) target)))
 
 (defun weight-deltas (nablas-0 activations-0)
@@ -195,7 +195,7 @@
                       (cons
                         (multiply
                           nabla-n
-                          (transpose 
+                          (transpose
                             activation-n-1))
                         weight-deltas)))
                (nreverse weight-deltas))))
@@ -216,7 +216,7 @@
         collect (subtract biases (scale bias-deltas learning-rate))))
 
 (defun random-matrix (rows columns)
-  (iterate 
+  (iterate
     (list rows columns)
     (lambda (result row column)
       (setf (aref result row column)
@@ -263,7 +263,7 @@
   (defvar weights/ weights)
   (defvar biases/ biases))
 
-(multiple-value-bind (trained-weights trained-biases) 
+(multiple-value-bind (trained-weights trained-biases)
   (train input/ target/ weights/ biases/ 1.0 0.0001)
   (defvar trained-weights/ trained-weights)
   (defvar trained-biases/ trained-biases))
