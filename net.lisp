@@ -1,6 +1,6 @@
 (setf *random-state* (make-random-state t))
 
-(defun last1 (lst) 
+(defun last1 (lst)
   (first (last lst)))
 
 (defun iterate (dimensions function)
@@ -11,7 +11,7 @@
     result))
 
 (defun matrix-map (function matrix)
-  (iterate 
+  (iterate
     (array-dimensions matrix)
     (lambda (result row column)
       (setf (aref result row column)
@@ -158,52 +158,52 @@
 (defun cost (activation-l target)
   (scale (square (subtract activation-l target)) 0.5))
 
-(defun nabla-l (output-l activation-l target)
+(defun delta-l (output-l activation-l target)
   (hadamard (sigmoid-derivative-map output-l)
             (subtract activation-l target)))
 
-(defun nabla-n (weights-1 outputs-0 nabla-l)
-  (labels ((rec (weights outputs nablas)
+(defun delta-n (weights-1 outputs-0 delta-l)
+  (labels ((rec (weights outputs deltas)
              (if outputs
                (let ((weight-n+1 (first weights))
                      (output-n (first outputs))
-                     (nabla-n+1 (first nablas)))
+                     (delta-n+1 (first deltas)))
                  (rec (rest weights)
                       (rest outputs)
                       (cons
                         (hadamard
                           (multiply
                             (transpose weight-n+1)
-                            nabla-n+1)
+                            delta-n+1)
                           (sigmoid-derivative-map output-n))
-                        nablas)))
-               nablas)))
-    (rec (reverse weights-1) (reverse outputs-0) (list nabla-l))))
+                        deltas)))
+               deltas)))
+    (rec (reverse weights-1) (reverse outputs-0) (list delta-l))))
 
-(defun nablas (weights outputs activations target)
-  (nabla-n (rest weights)
+(defun deltas (weights outputs activations target)
+  (delta-n (rest weights)
            (butlast outputs)
-           (nabla-l (last1 outputs) (last1 activations) target)))
+           (delta-l (last1 outputs) (last1 activations) target)))
 
-(defun weight-deltas (nablas-0 activations-0)
-  (labels ((rec (nablas activations weight-deltas)
-             (if nablas
-               (let ((nabla-n (first nablas))
+(defun weight-deltas (deltas-0 activations-0)
+  (labels ((rec (deltas activations weight-deltas)
+             (if deltas
+               (let ((delta-n (first deltas))
                      (activation-n-1 (first activations)))
-                 (rec (rest nablas)
+                 (rec (rest deltas)
                       (rest activations)
                       (cons
                         (multiply
-                          nabla-n
+                          delta-n
                           (transpose
                             activation-n-1))
                         weight-deltas)))
                (nreverse weight-deltas))))
-    (rec nablas-0 activations-0 nil)))
+    (rec deltas-0 activations-0 nil)))
 
-(defun bias-deltas (nablas-0)
-  (loop for nablas in nablas-0
-        collect (average-columns nablas)))
+(defun bias-deltas (deltas-0)
+  (loop for deltas in deltas-0
+        collect (average-columns deltas)))
 
 (defun update-weights (weight-deltas-0 weights-0 learning-rate)
   (loop for weight-deltas in weight-deltas-0
@@ -238,9 +238,9 @@
   (multiple-value-bind (outputs activations) (propogate input weights biases)
     (let ((cost (cost (last1 activations) target)))
       (if (> (aref (average-columns cost) 0 0) desired-cost)
-        (let* ((nablas (nablas weights outputs activations target))
-               (weight-deltas (weight-deltas nablas activations))
-               (bias-deltas (bias-deltas nablas))
+        (let* ((deltas (deltas weights outputs activations target))
+               (weight-deltas (weight-deltas deltas activations))
+               (bias-deltas (bias-deltas deltas))
                (trained-weights (update-weights weight-deltas weights learning-rate))
                (trained-biases (update-biases bias-deltas biases learning-rate)))
           (train input target trained-weights trained-biases learning-rate desired-cost))
